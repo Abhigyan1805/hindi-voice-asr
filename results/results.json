@@ -1,0 +1,409 @@
+{
+  "mode": "full",
+  "versions": {
+    "python": "3.13.15",
+    "torch": "2.11.0+cu128",
+    "transformers": "5.16.1",
+    "peft": "0.21.2",
+    "jiwer": "4.0.0",
+    "numpy": "2.1.3",
+    "soundfile": "0.14.0",
+    "huggingface_hub": "1.29.0",
+    "pyarrow": "23.0.1",
+    "cuda": "12.8",
+    "gpu": "Tesla T4"
+  },
+  "stages": {
+    "whisper-small-zeroshot": {
+      "wer": 79.19,
+      "cer": 49.44,
+      "n": 418,
+      "batched_seconds": 140.2,
+      "batched_rtf": 0.029,
+      "single_stream": {
+        "rtf": 0.1732,
+        "mean_latency_s": 2.041,
+        "p90_latency_s": 4.926,
+        "mean_audio_s": 11.78,
+        "n": 60
+      },
+      "runaway_outputs": 35,
+      "latin_subset": {
+        "wer": 105.1,
+        "cer": 63.79,
+        "n": 16
+      }
+    },
+    "lora-r32-aug": {
+      "wer": 24.53,
+      "cer": 10.11,
+      "n": 418,
+      "batched_seconds": 80.4,
+      "batched_rtf": 0.0166,
+      "single_stream": {
+        "rtf": 0.1299,
+        "mean_latency_s": 1.53,
+        "p90_latency_s": 2.264,
+        "mean_audio_s": 11.78,
+        "n": 60
+      },
+      "runaway_outputs": 1,
+      "latin_subset": {
+        "wer": 32.65,
+        "cer": 16.4,
+        "n": 16
+      },
+      "best_val": {
+        "epoch": 4,
+        "step": 660,
+        "wer": 26.27,
+        "cer": 11.64,
+        "n": 200,
+        "seconds": 74.5
+      }
+    },
+    "whisper-medium-zeroshot": {
+      "wer": 42.95,
+      "cer": 21.4,
+      "n": 418,
+      "batched_seconds": 192.0,
+      "batched_rtf": 0.0397,
+      "single_stream": {
+        "rtf": 0.2412,
+        "mean_latency_s": 2.841,
+        "p90_latency_s": 4.075,
+        "mean_audio_s": 11.78,
+        "n": 60
+      },
+      "runaway_outputs": 6,
+      "latin_subset": {
+        "wer": 51.53,
+        "cer": 38.01,
+        "n": 16
+      }
+    },
+    "lora-r8-aug": {
+      "wer": 26.98,
+      "cer": 11.34,
+      "n": 418,
+      "batched_seconds": 76.4,
+      "batched_rtf": 0.0158,
+      "single_stream": {
+        "rtf": 0.1287,
+        "mean_latency_s": 1.516,
+        "p90_latency_s": 2.266,
+        "mean_audio_s": 11.78,
+        "n": 60
+      },
+      "runaway_outputs": 0,
+      "latin_subset": {
+        "wer": 29.59,
+        "cer": 13.57,
+        "n": 16
+      },
+      "best_val": {
+        "epoch": 3,
+        "step": 528,
+        "wer": 28.64,
+        "cer": 11.93,
+        "n": 200,
+        "seconds": 74.2
+      }
+    },
+    "lora-r32-noaug": {
+      "wer": 25.67,
+      "cer": 10.25,
+      "n": 418,
+      "batched_seconds": 75.9,
+      "batched_rtf": 0.0157,
+      "single_stream": {
+        "rtf": 0.1296,
+        "mean_latency_s": 1.527,
+        "p90_latency_s": 2.252,
+        "mean_audio_s": 11.78,
+        "n": 60
+      },
+      "runaway_outputs": 0,
+      "latin_subset": {
+        "wer": 31.38,
+        "cer": 15.24,
+        "n": 16
+      },
+      "best_val": {
+        "epoch": 4,
+        "step": 660,
+        "wer": 26.64,
+        "cer": 11.33,
+        "n": 200,
+        "seconds": 74.5
+      }
+    }
+  },
+  "skipped": [],
+  "data": {
+    "train": {
+      "utterances": 2120,
+      "hours": 6.66,
+      "sentences": 1311
+    },
+    "validation": {
+      "utterances": 239,
+      "hours": 0.71,
+      "sentences": 126
+    },
+    "test": {
+      "utterances": 418,
+      "hours": 1.34,
+      "sentences": 265
+    },
+    "test_latin_utterances": 16,
+    "load_seconds": 28
+  },
+  "elapsed_s": 6531,
+  "training": {
+    "lora-r32-aug": {
+      "config": {
+        "name": "lora-r32-aug",
+        "base": "openai/whisper-small",
+        "rank": 32,
+        "alpha": null,
+        "dropout": 0.05,
+        "augment": true,
+        "epochs": 5,
+        "batch_size": 8,
+        "grad_accum": 2,
+        "lr": 0.001,
+        "weight_decay": 0.01,
+        "warmup_frac": 0.1,
+        "grad_clip": 1.0,
+        "seed": 1234,
+        "val_size": 200,
+        "num_workers": 4,
+        "max_steps": null,
+        "extra": {}
+      },
+      "trainable_params": 7077888,
+      "total_params": 248812800,
+      "train_utterances": 2115,
+      "dropped_utterances": 5,
+      "train_audio_hours": 6.61,
+      "steps_per_epoch": 132,
+      "total_steps": 660,
+      "val": [
+        {
+          "epoch": 0,
+          "step": 132,
+          "wer": 36.27,
+          "cer": 15.91,
+          "n": 200,
+          "seconds": 90.2
+        },
+        {
+          "epoch": 1,
+          "step": 264,
+          "wer": 29.87,
+          "cer": 12.38,
+          "n": 200,
+          "seconds": 74.0
+        },
+        {
+          "epoch": 2,
+          "step": 396,
+          "wer": 30.02,
+          "cer": 14.21,
+          "n": 200,
+          "seconds": 87.9
+        },
+        {
+          "epoch": 3,
+          "step": 528,
+          "wer": 27.6,
+          "cer": 12.55,
+          "n": 200,
+          "seconds": 79.5
+        },
+        {
+          "epoch": 4,
+          "step": 660,
+          "wer": 26.27,
+          "cer": 11.64,
+          "n": 200,
+          "seconds": 74.5
+        }
+      ],
+      "best": {
+        "epoch": 4,
+        "step": 660,
+        "wer": 26.27,
+        "cer": 11.64,
+        "n": 200,
+        "seconds": 74.5
+      },
+      "train_seconds": 1782,
+      "stopped_early": false
+    },
+    "lora-r8-aug": {
+      "config": {
+        "name": "lora-r8-aug",
+        "base": "openai/whisper-small",
+        "rank": 8,
+        "alpha": null,
+        "dropout": 0.05,
+        "augment": true,
+        "epochs": 5,
+        "batch_size": 8,
+        "grad_accum": 2,
+        "lr": 0.001,
+        "weight_decay": 0.01,
+        "warmup_frac": 0.1,
+        "grad_clip": 1.0,
+        "seed": 1234,
+        "val_size": 200,
+        "num_workers": 4,
+        "max_steps": null,
+        "extra": {}
+      },
+      "trainable_params": 1769472,
+      "total_params": 243504384,
+      "train_utterances": 2115,
+      "dropped_utterances": 5,
+      "train_audio_hours": 6.61,
+      "steps_per_epoch": 132,
+      "total_steps": 660,
+      "val": [
+        {
+          "epoch": 0,
+          "step": 132,
+          "wer": 34.51,
+          "cer": 16.1,
+          "n": 200,
+          "seconds": 91.2
+        },
+        {
+          "epoch": 1,
+          "step": 264,
+          "wer": 30.65,
+          "cer": 12.55,
+          "n": 200,
+          "seconds": 74.5
+        },
+        {
+          "epoch": 2,
+          "step": 396,
+          "wer": 30.8,
+          "cer": 13.29,
+          "n": 200,
+          "seconds": 81.8
+        },
+        {
+          "epoch": 3,
+          "step": 528,
+          "wer": 28.64,
+          "cer": 11.93,
+          "n": 200,
+          "seconds": 74.2
+        },
+        {
+          "epoch": 4,
+          "step": 660,
+          "wer": 29.55,
+          "cer": 12.79,
+          "n": 200,
+          "seconds": 81.7
+        }
+      ],
+      "best": {
+        "epoch": 3,
+        "step": 528,
+        "wer": 28.64,
+        "cer": 11.93,
+        "n": 200,
+        "seconds": 74.2
+      },
+      "train_seconds": 1760,
+      "stopped_early": false
+    },
+    "lora-r32-noaug": {
+      "config": {
+        "name": "lora-r32-noaug",
+        "base": "openai/whisper-small",
+        "rank": 32,
+        "alpha": null,
+        "dropout": 0.05,
+        "augment": false,
+        "epochs": 5,
+        "batch_size": 8,
+        "grad_accum": 2,
+        "lr": 0.001,
+        "weight_decay": 0.01,
+        "warmup_frac": 0.1,
+        "grad_clip": 1.0,
+        "seed": 1234,
+        "val_size": 200,
+        "num_workers": 4,
+        "max_steps": null,
+        "extra": {}
+      },
+      "trainable_params": 7077888,
+      "total_params": 248812800,
+      "train_utterances": 2115,
+      "dropped_utterances": 5,
+      "train_audio_hours": 6.61,
+      "steps_per_epoch": 132,
+      "total_steps": 660,
+      "val": [
+        {
+          "epoch": 0,
+          "step": 132,
+          "wer": 32.84,
+          "cer": 13.95,
+          "n": 200,
+          "seconds": 74.4
+        },
+        {
+          "epoch": 1,
+          "step": 264,
+          "wer": 30.39,
+          "cer": 12.5,
+          "n": 200,
+          "seconds": 73.2
+        },
+        {
+          "epoch": 2,
+          "step": 396,
+          "wer": 28.94,
+          "cer": 12.84,
+          "n": 200,
+          "seconds": 79.3
+        },
+        {
+          "epoch": 3,
+          "step": 528,
+          "wer": 27.03,
+          "cer": 11.68,
+          "n": 200,
+          "seconds": 75.3
+        },
+        {
+          "epoch": 4,
+          "step": 660,
+          "wer": 26.64,
+          "cer": 11.33,
+          "n": 200,
+          "seconds": 74.5
+        }
+      ],
+      "best": {
+        "epoch": 4,
+        "step": 660,
+        "wer": 26.64,
+        "cer": 11.33,
+        "n": 200,
+        "seconds": 74.5
+      },
+      "train_seconds": 1752,
+      "stopped_early": false
+    }
+  },
+  "done": true
+}
