@@ -11,7 +11,7 @@ from .inference import transcribe
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="Transcribe Hindi/Hinglish speech with Whisper-small + LoRA.")
     ap.add_argument("audio", nargs="+", help="audio file(s): wav, flac, mp3, ...")
-    ap.add_argument("--adapter", help="LoRA adapter dir (default: artifacts/adapter or $HINDI_ASR_ADAPTER)")
+    ap.add_argument("--adapter", help="LoRA adapter: local dir or Hugging Face Hub id (default: $HINDI_ASR_ADAPTER, else artifacts/adapter, else Dratinia/whisper-small-hindi-lora)")
     ap.add_argument("--base", action="store_true", help="use the zero-shot base model, no adapter")
     ap.add_argument("--beams", type=int, default=1)
     ap.add_argument("--ask", action="store_true", help="also send the transcript to the configured LLM")

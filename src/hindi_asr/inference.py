@@ -3,9 +3,11 @@
     from hindi_asr.inference import transcribe
     print(transcribe("question.wav"))
 
-The adapter directory defaults to ``artifacts/adapter`` (override with the
-``HINDI_ASR_ADAPTER`` env var or the ``adapter`` argument). Pass
-``adapter=None`` to get the zero-shot base model for comparison. Audio longer
+The adapter defaults to ``artifacts/adapter`` when that directory exists, and
+otherwise to the published Hugging Face adapter ``Dratinia/whisper-small-hindi-lora``.
+Override it with the ``HINDI_ASR_ADAPTER`` env var or the ``adapter`` argument:
+either a local directory or a Hub model id. Pass ``adapter=None`` to get the
+zero-shot base model for comparison. Audio longer
 than 30 s is decoded in consecutive 30 s windows.
 """
 
@@ -21,9 +23,17 @@ import torch
 from .data import SAMPLE_RATE, load_file
 from .model import BASE_MODEL, decode, load_finetuned, load_model, load_processor
 
-DEFAULT_ADAPTER = Path(__file__).resolve().parents[2] / "artifacts" / "adapter"
+LOCAL_ADAPTER = Path(__file__).resolve().parents[2] / "artifacts" / "adapter"
+HUB_ADAPTER = "Dratinia/whisper-small-hindi-lora"
 _WINDOW = 30 * SAMPLE_RATE
 _UNSET = object()
+
+
+def default_adapter() -> str:
+    """``$HINDI_ASR_ADAPTER``, else the local ``artifacts/adapter``, else the Hub adapter."""
+    if env := os.environ.get("HINDI_ASR_ADAPTER"):
+        return env
+    return str(LOCAL_ADAPTER) if LOCAL_ADAPTER.is_dir() else HUB_ADAPTER
 
 
 def _device() -> tuple[str, torch.dtype]:
@@ -42,7 +52,8 @@ class Transcriber:
         device, dtype = _device()
         self.processor = load_processor(base)
         if adapter:
-            if not Path(adapter, "adapter_config.json").exists():
+            # A path that does not exist locally is treated as a Hugging Face Hub model id.
+            if Path(adapter).exists() and not Path(adapter, "adapter_config.json").exists():
                 raise FileNotFoundError(f"no LoRA adapter at {adapter} (expected adapter_config.json); see README 'Get the adapter'")
             self.model = load_finetuned(adapter, base, dtype=dtype, device=device)
         else:
@@ -56,7 +67,11 @@ class Transcriber:
 
 
 def transcribe(path: str | os.PathLike, adapter=_UNSET, num_beams: int = 1) -> str:
-    """Transcribe an audio file (wav/flac/mp3/...) to Hindi text."""
+    """Transcribe an audio file (wav/flac/mp3/...) to Hindi text.
+
+    ``adapter`` is a local adapter directory or a Hub id such as
+    ``"Dratinia/whisper-small-hindi-lora"``; ``None`` means the zero-shot base model.
+    """
     if adapter is _UNSET:
-        adapter = os.environ.get("HINDI_ASR_ADAPTER", str(DEFAULT_ADAPTER))
+        adapter = default_adapter()
     return get_transcriber(str(adapter) if adapter else None)(load_file(str(path)), num_beams=num_beams)

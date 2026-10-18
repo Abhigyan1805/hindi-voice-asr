@@ -19,7 +19,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 import gradio as gr  # noqa: E402
 
-from hindi_asr.inference import transcribe  # noqa: E402
+from hindi_asr.inference import default_adapter, transcribe  # noqa: E402
 from hindi_asr.llm import get_client  # noqa: E402
 
 
@@ -59,10 +59,10 @@ def build(adapter) -> gr.Blocks:
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--base", action="store_true", help="no adapter (zero-shot base model)")
-    ap.add_argument("--adapter", default=None)
+    ap.add_argument("--adapter", default=None, help="local adapter dir or Hugging Face Hub id")
     ap.add_argument("--port", type=int, default=int(os.environ.get("PORT", 7860)))
     args = ap.parse_args()
-    adapter = None if args.base else (args.adapter or os.environ.get("HINDI_ASR_ADAPTER") or str(Path(__file__).resolve().parents[1] / "artifacts" / "adapter"))
+    adapter = None if args.base else (args.adapter or default_adapter())
     build(adapter).launch(server_name="127.0.0.1", server_port=args.port)
 
 

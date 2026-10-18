@@ -1,6 +1,26 @@
 # Model card: whisper-small Hindi LoRA (`lora-r32-aug`)
 
-A LoRA adapter for [`openai/whisper-small`](https://huggingface.co/openai/whisper-small) that turns it into a usable Hindi transcriber. It is stored locally in `artifacts/adapter/` and has not been published.
+A LoRA adapter for [`openai/whisper-small`](https://huggingface.co/openai/whisper-small) that turns it into a usable Hindi transcriber. It is published on the Hugging Face Hub at [Dratinia/whisper-small-hindi-lora](https://huggingface.co/Dratinia/whisper-small-hindi-lora); the code, training and evaluation are at [github.com/Abhigyan1805/hindi-voice-asr](https://github.com/Abhigyan1805/hindi-voice-asr).
+
+## Use the published adapter
+
+```python
+import torch
+from peft import PeftModel
+from transformers import WhisperForConditionalGeneration, WhisperProcessor
+
+processor = WhisperProcessor.from_pretrained("openai/whisper-small", language="hindi", task="transcribe")
+model = WhisperForConditionalGeneration.from_pretrained("openai/whisper-small")
+model = PeftModel.from_pretrained(model, "Dratinia/whisper-small-hindi-lora").merge_and_unload().eval()
+
+# audio: 16 kHz mono float32 numpy array, up to 30 s
+features = processor.feature_extractor(audio, sampling_rate=16_000, return_tensors="pt").input_features
+with torch.inference_mode():
+    ids = model.generate(input_features=features, language="hi", task="transcribe", max_new_tokens=440)
+print(processor.batch_decode(ids, skip_special_tokens=True)[0])
+```
+
+With the repository installed, `hindi_asr.inference.transcribe("clip.wav")` does the same, and also loads the file, resamples it and windows long audio.
 
 ## Summary
 
@@ -9,7 +29,7 @@ A LoRA adapter for [`openai/whisper-small`](https://huggingface.co/openai/whispe
 | Base model | `openai/whisper-small` (242 M params, multilingual) |
 | Adapter | LoRA, rank 32, alpha 64, dropout 0.05, on `q_proj`, `k_proj`, `v_proj`, `out_proj` of all encoder self-attention and decoder self-/cross-attention blocks: 7.08 M trainable params (2.8 %), 28 MB safetensors |
 | Task | Hindi speech → Devanagari text (`language="hi"`, `task="transcribe"`), with punctuation as in FLEURS raw transcripts |
-| Inference | merge into the base weights (`hindi_asr.inference.transcribe`); same speed and memory as whisper-small |
+| Inference | load on top of `openai/whisper-small` with `PeftModel.from_pretrained(model, "Dratinia/whisper-small-hindi-lora")` and merge into the base weights; same speed and memory as whisper-small |
 | Test WER / CER | **24.53 % / 10.11 %** on FLEURS `hi_in` test (base whisper-small zero-shot: 79.19 % / 49.44 %; whisper-medium zero-shot: 42.95 % / 21.40 %) |
 | Latency | single-stream RTF 0.13 on a T4 (1.5 s mean for an 11.8 s clip), fp16, greedy |
 

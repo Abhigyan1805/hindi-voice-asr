@@ -4,6 +4,7 @@ Hindi / Hinglish speech-to-text: **`openai/whisper-small` fine-tuned with LoRA o
 
 - a Python API, `transcribe("clip.wav") -> "हिंदी टेक्स्ट"`, with the adapter merged into the base model so decoding costs exactly what the base model costs;
 - a CLI (`hindi-asr clip.wav`);
+- a published LoRA adapter on the Hugging Face Hub: **[Dratinia/whisper-small-hindi-lora](https://huggingface.co/Dratinia/whisper-small-hindi-lora)** (28 MB);
 - a small **speak-a-question demo** (Gradio): record or upload audio, read the transcript, and optionally send it to an LLM for an answer. It works without any API key and then only transcribes.
 
 Everything is reproducible: one Kaggle T4 script kernel trains and evaluates every model in the tables below, with fixed seeds and the exact code bundled from this repo.
@@ -24,7 +25,7 @@ Even after re-scoring every model only on the clips where none of them falls int
 python -m venv .venv && . .venv/bin/activate
 pip install -e ".[demo,llm]"          # torch, transformers, peft, jiwer, gradio, ...
 
-# the LoRA adapter (about 28 MB) lives in artifacts/adapter/ (gitignored; see "Get the adapter")
+# the adapter is fetched from the Hub (Dratinia/whisper-small-hindi-lora) unless artifacts/adapter/ exists
 hindi-asr question.wav                 # fine-tuned model
 hindi-asr --base question.wav          # zero-shot whisper-small, for comparison
 python app/demo.py                     # http://127.0.0.1:7860
@@ -51,16 +52,36 @@ The demo and `hindi-asr --ask` pass the transcript to a pluggable client (`src/h
 
 Keys are read from the environment only and are never written anywhere.
 
+### Use the published adapter
+
+The adapter is published at [huggingface.co/Dratinia/whisper-small-hindi-lora](https://huggingface.co/Dratinia/whisper-small-hindi-lora). `transcribe()`, the CLI and the demo use it by default, and also accept a Hub id via `--adapter` or `HINDI_ASR_ADAPTER`. Without this package, plain `transformers` + `peft` is enough:
+
+```python
+import torch
+from peft import PeftModel
+from transformers import WhisperForConditionalGeneration, WhisperProcessor
+
+processor = WhisperProcessor.from_pretrained("openai/whisper-small", language="hindi", task="transcribe")
+model = WhisperForConditionalGeneration.from_pretrained("openai/whisper-small")
+model = PeftModel.from_pretrained(model, "Dratinia/whisper-small-hindi-lora").merge_and_unload().eval()
+
+# audio: 16 kHz mono float32 numpy array, up to 30 s
+features = processor.feature_extractor(audio, sampling_rate=16_000, return_tensors="pt").input_features
+with torch.inference_mode():
+    ids = model.generate(input_features=features, language="hi", task="transcribe", max_new_tokens=440)
+print(processor.batch_decode(ids, skip_special_tokens=True)[0])
+```
+
 ### Get the adapter
 
-The trained adapter is a Kaggle kernel output, not stored in git. Copy it into `artifacts/adapter/`:
+The adapter is a Kaggle kernel output and is not stored in git. To use a local copy, for example offline, copy it into `artifacts/adapter/`, which takes precedence over the Hub:
 
 ```bash
 KAGGLE_API_TOKEN=... kaggle kernels output abhigyan1881/hva-whisper-lora -p kaggle/output/full
 mkdir -p artifacts && cp -r kaggle/output/full/adapters/lora-r32-aug artifacts/adapter
 ```
 
-Alternatively, set `HINDI_ASR_ADAPTER=/path/to/adapter`.
+Alternatively, set `HINDI_ASR_ADAPTER` to an adapter directory or a Hub id.
 
 ## How it works
 
