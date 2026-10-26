@@ -70,7 +70,7 @@ python app/demo.py                     # http://127.0.0.1:7860
 - **Not deployed.** This is a local demo and a published adapter; there is no hosted service, and no real users or production use are claimed.
 - **Read speech only.** FLEURS is read Wikipedia-style sentences, so conversational, noisy, telephone or strongly code-switched audio will be worse. FLEURS writes English loanwords in Devanagari, so the model learns to do the same (see [MODEL_CARD.md](MODEL_CARD.md)).
 - **One seed, no confidence intervals.** The ablation differences (1-2.5 WER) are within what seed variance can produce. The test set is 1.3 h, and it is held out: it was not used for training or for picking the epoch (200 validation utterances were).
-- **Headline gain includes loops.** Zero-shot whisper-small loops on 35 of 418 clips; the like-for-like gain on loop-free clips is 55.9 to 23.4 WER.
+- **Headline gain includes loops.** Zero-shot whisper-small loops on 35 of 418 clips; the like-for-like loop-free comparison is in [Results at a glance](#results-at-a-glance).
 - **Latency is not a serving benchmark.** RTF is from fp16 Hugging Face `generate` on a T4, not an optimised stack.
 - **No CI.** There is no GitHub Actions workflow; only the unit tests in `tests/` (`pytest`).
 
@@ -84,25 +84,19 @@ python app/demo.py                     # http://127.0.0.1:7860
 
 ## Detailed results (FLEURS Hindi test, 418 utterances, Kaggle T4)
 
-| Model | WER % | CER % | Single-stream RTF | Runaway outputs |
-|---|---:|---:|---:|---:|
-| whisper-small, zero-shot | 79.19 | 49.44 | 0.173 | 35 |
-| whisper-medium, zero-shot (3× larger) | 42.95 | 21.40 | 0.241 | 6 |
-| **whisper-small + LoRA r32 (this repo)** | **24.53** | **10.11** | **0.130** | 1 |
+WER and CER are in [Results at a glance](#results-at-a-glance); ablations are under [What I learned](#what-i-learned--design-decisions).
 
-Even after re-scoring every model only on the clips where none of them falls into a repetition loop, WER still drops from 55.9 to 23.4. Ablation (one seed each): LoRA rank 8 gives 26.98 WER, and dropping augmentation gives 25.67 WER. Full tables, run IDs, versions and qualitative examples, including the code-switched (Latin-script) subset, are in **[RESULTS.md](RESULTS.md)**. Data, training details and limitations are in **[MODEL_CARD.md](MODEL_CARD.md)**.
+| Model | Single-stream RTF | Runaway outputs |
+|---|---:|---:|
+| whisper-small, zero-shot | 0.173 | 35 |
+| whisper-medium, zero-shot (3× larger) | 0.241 | 6 |
+| **whisper-small + LoRA r32 (this repo)** | **0.130** | 1 |
+
+Full tables, run IDs, versions and qualitative examples, including the code-switched (Latin-script) subset, are in **[RESULTS.md](RESULTS.md)**. Data, training details and limitations are in **[MODEL_CARD.md](MODEL_CARD.md)**.
 
 ## Usage details
 
-```bash
-python -m venv .venv && . .venv/bin/activate
-pip install -e ".[demo,llm]"          # torch, transformers, peft, jiwer, gradio, ...
-
-# the adapter is fetched from the Hub (Dratinia/whisper-small-hindi-lora) unless artifacts/adapter/ exists
-hindi-asr question.wav                 # fine-tuned model
-hindi-asr --base question.wav          # zero-shot whisper-small, for comparison
-python app/demo.py                     # http://127.0.0.1:7860
-```
+Install and CLI commands are in [Quick start](#quick-start). The adapter is fetched from the Hub (`Dratinia/whisper-small-hindi-lora`) unless `artifacts/adapter/` exists.
 
 ```python
 from hindi_asr.inference import transcribe
