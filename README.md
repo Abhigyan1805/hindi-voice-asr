@@ -189,7 +189,7 @@ pytest                                         # normaliser / metric / augmentat
 
 - A voice front-end for the `guardrailed-sql-analyst` project: ask a data question aloud, then transcribe → SQL agent.
 - Add Common Voice / IndicVoices / Shrutilipi data for conversational coverage, then try whisper-medium + LoRA or distil/turbo variants for latency.
-- Streaming (chunked) decoding and CTranslate2 / faster-whisper export for CPU serving.
+- Streaming (chunked) decoding for CPU serving (CTranslate2 / faster-whisper int8 export is done; see [CPU int8 variants](#cpu-int8-variants)).
 
 ## Licence
 
