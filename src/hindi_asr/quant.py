@@ -38,7 +38,6 @@ CT2_DIR = QUANT_DIR / "ct2-int8"
 TORCH_INT8_FILE = QUANT_DIR / "torch-int8.pt"
 OUT_DIR = ROOT / "results" / "quant"
 VARIANTS = ("fp32", "torch-int8", "ct2-int8")
-MAX_NEW_TOKENS = 440
 MEM_CLIPS = QUANT_DIR / "mem_clips.npz"
 
 
@@ -76,6 +75,7 @@ def convert(adapter: str | None = None, force: bool = False) -> dict[str, float]
     from .model import BASE_MODEL, load_processor
 
     QUANT_DIR.mkdir(parents=True, exist_ok=True)
+    force = force or adapter is not None
     if force or not (MERGED_DIR / "model.safetensors").exists():
         model = load_merged(adapter)
         model.save_pretrained(MERGED_DIR)
@@ -126,6 +126,9 @@ class _CT2Runner:
     def __init__(self, threads: int):
         from faster_whisper import WhisperModel
 
+        from .model import MAX_NEW_TOKENS
+
+        self.max_new_tokens = MAX_NEW_TOKENS
         self.model = WhisperModel(str(CT2_DIR), device="cpu", compute_type="int8", cpu_threads=threads)
 
     def __call__(self, audio: np.ndarray) -> str:
@@ -138,7 +141,7 @@ class _CT2Runner:
             condition_on_previous_text=False,
             without_timestamps=True,
             vad_filter=False,
-            max_new_tokens=MAX_NEW_TOKENS,
+            max_new_tokens=self.max_new_tokens,
         )
         return " ".join(s.text.strip() for s in segments).strip()
 
@@ -173,6 +176,7 @@ def versions() -> dict[str, str]:
 
 def bench(variant: str, limit: int | None, threads: int, warmup: int = 2) -> dict:
     from .data import load_fleurs
+    from .model import MAX_NEW_TOKENS
 
     utts = load_fleurs("test", limit=limit)  # sorted by file name: a fixed, documented subset
     runner = make_runner(variant, threads)
@@ -204,7 +208,7 @@ def bench(variant: str, limit: int | None, threads: int, warmup: int = 2) -> dic
         "cpu": cpu_model(),
         "versions": versions(),
         "subset": f"first {len(utts)} test clips by file name" if limit else "full test split",
-        "decoding": "greedy (beam 1), language=hi, max 440 new tokens, one clip at a time",
+        "decoding": f"greedy (beam 1), language=hi, max {MAX_NEW_TOKENS} new tokens, one clip at a time",
     }
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     (OUT_DIR / f"{variant}.json").write_text(json.dumps(res, indent=2, ensure_ascii=False))

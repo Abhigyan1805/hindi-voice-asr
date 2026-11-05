@@ -104,7 +104,7 @@ The merged model can be converted to int8 for CPU. Measured on a laptop CPU (i5-
 | PyTorch dynamic int8 (`quantize_dynamic`, Linear layers) | 413 MB | 26.97 | 10.63 | 0.413 | 5.01 s (7.13 s) | 2,563 MB* | 1.58x |
 | CTranslate2 int8 (faster-whisper) | 253 MB | 26.12 | 10.83 | 0.320 | 3.88 s (4.95 s) | 653 MB | 2.04x |
 
-int8 roughly halves latency and cuts size 2.3-3.8x, at a cost of about 2.6-3.5 WER points on this subset. These are laptop-CPU numbers, not an embedded or on-device deployment. Caveats, versions and commands are in [RESULTS.md](RESULTS.md#cpu-int8-variants-laptop-cpu-150-clip-subset); the code is `src/hindi_asr/quant.py`.
+int8 cuts mean latency by 37-51% (1.6-2.0x faster) and cuts size 2.3-3.8x, at a cost of about 2.6-3.5 WER points on this subset. These are laptop-CPU numbers, not an embedded or on-device deployment. Caveats, versions and commands are in [RESULTS.md](RESULTS.md#cpu-int8-variants-laptop-cpu-150-clip-subset); the code is `src/hindi_asr/quant.py`.
 
 ## Usage details
 
