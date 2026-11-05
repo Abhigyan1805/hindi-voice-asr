@@ -1,0 +1,25 @@
+{
+  "variant": "fp32",
+  "wer": 23.51,
+  "cer": 9.1,
+  "n": 150,
+  "size_mb": 967.0,
+  "rtf": 0.654,
+  "mean_latency_s": 7.932,
+  "p90_latency_s": 10.605,
+  "mean_audio_s": 12.13,
+  "peak_rss_mb": 3290,
+  "threads": 4,
+  "cpu": "11th Gen Intel(R) Core(TM) i5-11300H @ 3.10GHz",
+  "versions": {
+    "torch": "2.15.0+cpu",
+    "transformers": "5.22.1",
+    "peft": "0.21.2",
+    "ctranslate2": "4.8.5",
+    "faster-whisper": "1.2.1",
+    "jiwer": "4.0.0",
+    "numpy": "2.5.4"
+  },
+  "subset": "first 150 test clips by file name",
+  "decoding": "greedy (beam 1), language=hi, max 440 new tokens, one clip at a time"
+}
