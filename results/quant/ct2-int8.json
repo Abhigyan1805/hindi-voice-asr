@@ -1,0 +1,25 @@
+{
+  "variant": "ct2-int8",
+  "wer": 26.12,
+  "cer": 10.83,
+  "n": 150,
+  "size_mb": 253.2,
+  "rtf": 0.32,
+  "mean_latency_s": 3.879,
+  "p90_latency_s": 4.945,
+  "mean_audio_s": 12.13,
+  "peak_rss_mb": 2547,
+  "threads": 4,
+  "cpu": "11th Gen Intel(R) Core(TM) i5-11300H @ 3.10GHz",
+  "versions": {
+    "torch": "2.15.0+cpu",
+    "transformers": "5.22.1",
+    "peft": "0.21.2",
+    "ctranslate2": "4.8.5",
+    "faster-whisper": "1.2.1",
+    "jiwer": "4.0.0",
+    "numpy": "2.5.4"
+  },
+  "subset": "first 150 test clips by file name",
+  "decoding": "greedy (beam 1), language=hi, max 440 new tokens, one clip at a time"
+}

@@ -1,0 +1,6 @@
+{
+  "variant": "fp32",
+  "peak_rss_mb": 1560,
+  "clips": 5,
+  "threads": 4
+}

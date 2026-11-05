@@ -94,6 +94,18 @@ WER and CER are in [Results at a glance](#results-at-a-glance); ablations are un
 
 Full tables, run IDs, versions and qualitative examples, including the code-switched (Latin-script) subset, are in **[RESULTS.md](RESULTS.md)**. Data, training details and limitations are in **[MODEL_CARD.md](MODEL_CARD.md)**.
 
+## CPU int8 variants
+
+The merged model can be converted to int8 for CPU. Measured on a laptop CPU (i5-11300H, 4 threads) over the first 150 FLEURS test clips, greedy decoding, same clips for every row:
+
+| Variant | Size on disk | WER % | CER % | RTF | Mean latency (p90) per clip | Peak RSS | Speed-up vs fp32 |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| fp32 PyTorch (baseline) | 967 MB | 23.51 | 9.10 | 0.654 | 7.93 s (10.61 s) | 1,560 MB | 1.00x |
+| PyTorch dynamic int8 (`quantize_dynamic`, Linear layers) | 413 MB | 26.97 | 10.63 | 0.413 | 5.01 s (7.13 s) | 2,563 MB* | 1.58x |
+| CTranslate2 int8 (faster-whisper) | 253 MB | 26.12 | 10.83 | 0.320 | 3.88 s (4.95 s) | 653 MB | 2.04x |
+
+int8 cuts mean latency by 37-51% (1.6-2.0x faster) and cuts size 2.3-3.8x, at a cost of about 2.6-3.5 WER points on this subset. These are laptop-CPU numbers, not an embedded or on-device deployment. Caveats, versions and commands are in [RESULTS.md](RESULTS.md#cpu-int8-variants-laptop-cpu-150-clip-subset); the code is `src/hindi_asr/quant.py`.
+
 ## Usage details
 
 Install and CLI commands are in [Quick start](#quick-start). The adapter is fetched from the Hub (`Dratinia/whisper-small-hindi-lora`) unless `artifacts/adapter/` exists.
@@ -177,7 +189,7 @@ pytest                                         # normaliser / metric / augmentat
 
 - A voice front-end for the `guardrailed-sql-analyst` project: ask a data question aloud, then transcribe → SQL agent.
 - Add Common Voice / IndicVoices / Shrutilipi data for conversational coverage, then try whisper-medium + LoRA or distil/turbo variants for latency.
-- Streaming (chunked) decoding and CTranslate2 / faster-whisper export for CPU serving.
+- Streaming (chunked) decoding for CPU serving (CTranslate2 / faster-whisper int8 export is done; see [CPU int8 variants](#cpu-int8-variants)).
 
 ## Licence
 

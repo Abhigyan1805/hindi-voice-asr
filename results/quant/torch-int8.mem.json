@@ -1,0 +1,6 @@
+{
+  "variant": "torch-int8",
+  "peak_rss_mb": 2563,
+  "clips": 5,
+  "threads": 4
+}

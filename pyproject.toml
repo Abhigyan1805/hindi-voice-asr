@@ -18,6 +18,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+quant = ["ctranslate2", "faster-whisper"]
 demo = ["gradio>=4.44"]
 llm = ["anthropic", "openai"]
 dev = ["pytest"]

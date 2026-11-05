@@ -68,6 +68,34 @@ So the real like-for-like gain on clean outputs is 55.9 → 23.4 WER (−58 % re
 
 With n = 16 this is anecdotal. The main pattern is in the examples below: FLEURS transcribers are inconsistent (`METI` vs `मेटी`), and the fine-tuned model usually writes English acronyms in Devanagari (`पीएच`, `एमईटीआई`, `सीईपी`). Under strict WER that counts as an error even when it is a faithful transcription.
 
+## CPU int8 variants (laptop CPU, 150-clip subset)
+
+| Variant | Size on disk | WER % | CER % | RTF | Mean latency (p90) per clip | Peak RSS | Speed-up vs fp32 |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| fp32 PyTorch (baseline) | 967 MB | 23.51 | 9.10 | 0.654 | 7.93 s (10.61 s) | 1,560 MB | 1.00x |
+| PyTorch dynamic int8 (`quantize_dynamic`, Linear layers) | 413 MB | 26.97 | 10.63 | 0.413 | 5.01 s (7.13 s) | 2,563 MB* | 1.58x |
+| CTranslate2 int8 (faster-whisper) | 253 MB | 26.12 | 10.83 | 0.320 | 3.88 s (4.95 s) | 653 MB | 2.04x |
+
+Measured on a laptop CPU (11th Gen Intel Core i5-11300H, 4 threads, WSL2, 5.9 GB RAM shared with other work), no GPU. The model is the project's own: whisper-small plus the `Dratinia/whisper-small-hindi-lora` adapter merged into the base weights. Scoring uses the project's `hindi_asr.text.normalize` and corpus WER/CER.
+
+- **Subset:** the first **150** of the 418 FLEURS Hindi test clips by file name (mean 12.1 s of audio each), the same clips for every variant, including the fp32 baseline. Full-set numbers are not measured for these variants, so the fp32 23.51 % WER here is not comparable with the 24.53 % on the full 418 clips above; compare rows within this table only. One run each, no confidence intervals; with 150 clips a difference of a point or so is within noise.
+- **Decoding:** greedy (beam 1), `language="hi"`, max 440 new tokens, one clip at a time, no batching, no VAD, no temperature fallback. RTF = compute time / audio time (feature extraction plus decoding), after 2 warm-up clips.
+- **Accuracy cost:** int8 costs about **+2.6 WER / +1.7 CER points** (CTranslate2) and **+3.5 WER / +1.5 CER points** (PyTorch dynamic) over fp32. This is a larger cost than int8 usually shows on English Whisper; I did not investigate why, and did not try quantisation-aware calibration or keeping sensitive layers in higher precision. No runaway outputs (hypothesis more than twice the reference length) occurred in any variant on this subset.
+- **Size:** PyTorch dynamic quantisation only converts `nn.Linear`; the tied token embedding / output projection (about 160 MB in fp32) stays fp32, so it ends at 413 MB. CTranslate2 quantises it as well (253 MB). Sizes are the weights file(s) only (fp32 `model.safetensors`; the `.pt` state dict; the CTranslate2 directory including tokenizer).
+- **Peak RSS:** measured in a fresh process that loads the model and decodes 5 clips (`python -m hindi_asr.quant mem <variant>`). \*The PyTorch int8 figure is dominated by the fp32 model being loaded before it is quantised in memory; a deployment would load the saved int8 state, which I did not measure.
+- **Not claimed:** this is a laptop CPU, not an embedded or on-device target. ONNX Runtime was not tried.
+- **Versions:** Python 3.12.14, torch 2.15.0+cpu, transformers 5.22.1, peft 0.21.2, ctranslate2 4.8.5, faster-whisper 1.2.1, jiwer 4.0.0, numpy 2.5.4. Raw per-variant results and predictions: [`results/quant/`](results/quant/).
+
+Reproduce (artifacts go to the git-ignored `artifacts/quant/`):
+
+```bash
+pip install -e '.[quant]'
+python -m hindi_asr.quant convert
+for v in fp32 torch-int8 ct2-int8; do python -m hindi_asr.quant bench $v --limit 150 --threads 4; done
+python -m hindi_asr.quant mem-clips && for v in fp32 torch-int8 ct2-int8; do python -m hindi_asr.quant mem $v; done
+python -m hindi_asr.quant report
+```
+
 ## Qualitative examples (test set)
 
 | | Text |
